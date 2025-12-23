@@ -1,0 +1,114 @@
+{
+	"info": {
+		"_postman_id": "bb630bdc-eb0f-4f70-bb7a-7ed5fb6cf6f4",
+		"name": "Goal",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "39977176"
+	},
+	"item": [
+		{
+			"name": "Create new goal",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"goal_type\": \"lose_weight\",\r\n  \"target_weight\": 65.0,\r\n  \"daily_calorie_target\": 1800\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{BASE_URL}}/goals"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Goal details",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"goal_type\": \"lose_weight\",\r\n  \"target_weight\": 65.0,\r\n  \"daily_calorie_target\": 1800\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{BASE_URL}}/goals/f0f604b7-3095-44e6-8a5c-89f20c093f74"
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Goal",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"goal_type\": \"lose_weight\",\r\n  \"target_weight\": 65.0,\r\n  \"daily_calorie_target\": 1800\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{BASE_URL}}/goals"
+			},
+			"response": []
+		},
+		{
+			"name": "Update goal",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"goal_type\": \"gain_muscle\",\r\n    \"target_weight\": 75.0,\r\n    \"daily_calorie_target\": 2200\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{BASE_URL}}/goals/f0f604b7-3095-44e6-8a5c-89f20c093f74"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "{{access_token}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
