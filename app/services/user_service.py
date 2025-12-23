@@ -11,9 +11,7 @@ from passlib.hash import pbkdf2_sha256
 from sqlalchemy import asc
 
 from app.db import db
-from app.models.ai_usage_model import AIUsageModel
 from app.models.blocklist_model import BlocklistModel
-from app.models.transaction_model import TransactionModel
 from app.models.user_model import UserModel
 from app.models.user_profile_model import UserProfileModel
 
@@ -21,48 +19,17 @@ from app.models.user_profile_model import UserProfileModel
 logger = logging.getLogger(__name__)
 
 
-def get_user_total_used_amount(user_id):
-    """
-    Calculate total amount used by user from AI usage costs
-    """
-    from sqlalchemy import func
-    result = db.session.query(func.sum(AIUsageModel.cost)).filter(
-        AIUsageModel.user_id == user_id
-    ).scalar()
-
-    return result if result else 0.0
-
-
-def get_user_total_deposited_amount(user_id):
-    """
-    Calculate total amount deposited by user from completed transactions (status=1)
-    """
-    from sqlalchemy import func
-    result = db.session.query(func.sum(TransactionModel.amount)).filter(
-        TransactionModel.user_id == user_id,
-        TransactionModel.status == 1  # completed transactions
-    ).scalar()
-
-    return result if result else 0.0
-
-
 def get_all_user():
     users = UserModel.query.order_by(asc(UserModel.id)).all()
 
     results = []
     for user in users:
-        # Calculate additional amounts if AI usage and transaction models exist
-        total_used_amount = get_user_total_used_amount(user.id)
-        total_deposited_amount = get_user_total_deposited_amount(user.id)
-
         # Create user info dict
         user_info = {
             "id": str(user.id),
             "email": user.email,
             "name": user.name,
             "created_at": user.created_at.isoformat() if user.created_at else None,
-            "total_used_amount": total_used_amount,
-            "total_deposited_amount": total_deposited_amount
         }
         results.append(user_info)
 
@@ -75,9 +42,6 @@ def get_user(user_id):
     if not user:
         return None
 
-    # Calculate additional amounts if AI usage and transaction models exist
-    total_used_amount = get_user_total_used_amount(user.id)
-    total_deposited_amount = get_user_total_deposited_amount(user.id)
 
     # Return user info with additional fields
     user_info = {
@@ -85,8 +49,6 @@ def get_user(user_id):
         "email": user.email,
         "name": user.name,
         "created_at": user.created_at.isoformat() if user.created_at else None,
-        "total_used_amount": total_used_amount,
-        "total_deposited_amount": total_deposited_amount
     }
 
     return user_info
@@ -180,10 +142,6 @@ def login_user(user_data):
 
         logger.info(f"User login successfully! email: {user_data['email']}")
 
-        # Calculate additional amounts if models exist
-        total_used_amount = get_user_total_used_amount(user.id)
-        total_deposited_amount = get_user_total_deposited_amount(user.id)
-
         # Get user profile information
         profile = user.user_profile
 
@@ -192,9 +150,8 @@ def login_user(user_data):
             "id": str(user.id),
             "email": user.email,
             "name": user.name,
+            "role": user.role,
             "created_at": user.created_at.isoformat() if user.created_at else None,
-            "total_used_amount": total_used_amount,
-            "total_deposited_amount": total_deposited_amount,
             "profile": {
                 "age": profile.age if profile else None,
                 "gender": profile.gender.value if profile and profile.gender else None,
@@ -276,10 +233,6 @@ def get_current_user():
         logger.error("User not found!")
         abort(404, message="User not found!")
 
-    # Calculate additional amounts if models exist
-    total_used_amount = get_user_total_used_amount(user.id)
-    total_deposited_amount = get_user_total_deposited_amount(user.id)
-
     # Get user profile information
     profile = user.user_profile
 
@@ -289,8 +242,7 @@ def get_current_user():
         "email": user.email,
         "name": user.name,
         "created_at": user.created_at.isoformat() if user.created_at else None,
-        "total_used_amount": total_used_amount,
-        "total_deposited_amount": total_deposited_amount,
+        "role": user.role,
         "profile": {
             "age": profile.age if profile else None,
             "gender": profile.gender.value if profile and profile.gender else None,
@@ -303,56 +255,6 @@ def get_current_user():
 
     return user_info
 
-
-def upgrade_guest(guest_data):
-    """
-    Upgrade a guest to a regular user - simplified version
-    Requires email and password verification, and new name
-    """
-    email = guest_data["email"]
-    name = guest_data["name"]
-    password = guest_data["password"]
-
-    # Find user by email
-    user = UserModel.query.filter(UserModel.email == email).first()
-    if not user:
-        logger.error(f"User with email {email} not found")
-        abort(404, message="User not found")
-
-    # Verify password
-    if not pbkdf2_sha256.verify(password, user.password):
-        logger.error(f"Invalid password for user {email}")
-        abort(401, message="Invalid password")
-
-    try:
-        # Update name
-        user.name = name
-        db.session.commit()
-
-        logger.info(f"Successfully updated user {email} with name {name}")
-
-        # Return user info after upgrade
-        total_used_amount = get_user_total_used_amount(user.id)
-        total_deposited_amount = get_user_total_deposited_amount(user.id)
-
-        user_info = {
-            "id": str(user.id),
-            "email": user.email,
-            "name": user.name,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-            "total_used_amount": total_used_amount,
-            "total_deposited_amount": total_deposited_amount
-        }
-
-        return {
-            "message": f"User updated successfully with name: {name}",
-            "user": user_info
-        }
-
-    except Exception as ex:
-        db.session.rollback()
-        logger.error(f"Failed to update user {email}: {ex}")
-        abort(500, message=f"Failed to update user: {ex}")
 
 
 def add_jti_blocklist(jti):

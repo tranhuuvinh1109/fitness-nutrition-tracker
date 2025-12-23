@@ -11,6 +11,7 @@ class UserModel(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255))
     name = db.Column(db.String(100))
+    role = db.Column(db.Integer, default=2)  # 1: admin, 2: user, 3: guest
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships

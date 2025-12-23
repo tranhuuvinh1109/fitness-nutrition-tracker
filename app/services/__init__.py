@@ -1,8 +1,4 @@
-from app.services.guest_service import (
-    create_guest_user,
-    get_guest_user,
-    cleanup_guest_users,
-)
+
 from app.services import (
     user_profile_service,
     goal_service,
