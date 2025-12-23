@@ -7,7 +7,7 @@ class PlainUserSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(validate=validate.Length(min=6, max=255), allow_none=True)
     name = fields.Str(validate=validate.Length(min=1, max=100), allow_none=True)
-    created_at = fields.DateTime(dump_only=True)
+    created_at = fields.Raw(dump_only=True)
 
 
 class UserUpdateSchema(Schema):
@@ -24,7 +24,7 @@ class UserProfileInfoSchema(Schema):
     height_cm = fields.Float(allow_none=True)
     weight_kg = fields.Float(allow_none=True)
     activity_level = fields.Str(allow_none=True)
-    updated_at = fields.DateTime(allow_none=True)
+    updated_at = fields.Raw(allow_none=True)
 
 
 class UserResponseSchema(Schema):
@@ -32,7 +32,7 @@ class UserResponseSchema(Schema):
     id = fields.Str(dump_only=True)
     email = fields.Str(dump_only=True)
     name = fields.Str(dump_only=True)
-    created_at = fields.DateTime(dump_only=True)
+    created_at = fields.Raw(dump_only=True)
     profile = fields.Nested(UserProfileInfoSchema, allow_none=True)
 
 

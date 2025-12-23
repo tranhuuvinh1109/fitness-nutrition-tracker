@@ -1,7 +1,7 @@
 from flask import jsonify
 
 from app.extention import jwt
-from app.models import  UserModel
+from app.models import UserModel, BlocklistModel
 
 
 @jwt.token_verification_loader

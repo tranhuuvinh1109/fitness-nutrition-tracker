@@ -1,6 +1,8 @@
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint
+from flask_jwt_extended import get_jwt_identity
+
 
 from app.schemas.user_profile_schema import (
     UserProfileResponseSchema,
@@ -17,7 +19,7 @@ class UserProfileList(MethodView):
     @blp.response(200, UserProfileResponseSchema)
     def get(self):
         """Get current user's profile"""
-        from flask_jwt_extended import get_jwt_identity
+        
         user_id = get_jwt_identity()
 
         result = user_profile_service.get_user_profile(user_id)
@@ -32,7 +34,7 @@ class UserProfileList(MethodView):
     @blp.response(200, UserProfileResponseSchema)
     def put(self, profile_data):
         """Update current user's profile"""
-        from flask_jwt_extended import get_jwt_identity
+        
         user_id = get_jwt_identity()
 
         result = user_profile_service.update_user_profile(user_id, profile_data)
@@ -42,7 +44,7 @@ class UserProfileList(MethodView):
     @blp.response(200)
     def post(self):
         """Create profile for current user"""
-        from flask_jwt_extended import get_jwt_identity
+        
         user_id = get_jwt_identity()
 
         # Check if profile already exists
@@ -62,7 +64,7 @@ class UserProfile(MethodView):
     @blp.response(200, UserProfileResponseSchema)
     def get(self, user_profile_id):
         """Get user profile by ID"""
-        from flask_jwt_extended import get_jwt_identity
+        
         current_user_id = get_jwt_identity()
 
         # Users can only access their own profile
@@ -81,7 +83,7 @@ class UserProfile(MethodView):
     @blp.response(200, UserProfileResponseSchema)
     def put(self, profile_data, user_profile_id):
         """Update user profile by ID"""
-        from flask_jwt_extended import get_jwt_identity
+        
         current_user_id = get_jwt_identity()
 
         # Users can only update their own profile
@@ -96,7 +98,7 @@ class UserProfile(MethodView):
     @blp.response(200)
     def delete(self, user_profile_id):
         """Delete user profile by ID"""
-        from flask_jwt_extended import get_jwt_identity
+        
         current_user_id = get_jwt_identity()
 
         # Users can only delete their own profile

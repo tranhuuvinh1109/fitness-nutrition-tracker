@@ -12,6 +12,7 @@ class UserModel(db.Model):
     password = db.Column(db.String(255))
     name = db.Column(db.String(100))
     role = db.Column(db.Integer, default=2)  # 1: admin, 2: user, 3: guest
+    block = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
