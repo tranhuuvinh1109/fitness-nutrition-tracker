@@ -15,6 +15,7 @@ from app.models.ai_usage_model import AIUsageModel
 from app.models.blocklist_model import BlocklistModel
 from app.models.transaction_model import TransactionModel
 from app.models.user_model import UserModel
+from app.models.user_profile_model import UserProfileModel
 
 # Create logger for this module
 logger = logging.getLogger(__name__)
@@ -46,23 +47,20 @@ def get_user_total_deposited_amount(user_id):
 
 
 def get_all_user():
-    users = UserModel.query.filter(UserModel.deleted_at.is_(None)).order_by(asc(UserModel.id)).all()
+    users = UserModel.query.order_by(asc(UserModel.id)).all()
 
     results = []
     for user in users:
-        # Calculate additional amounts
+        # Calculate additional amounts if AI usage and transaction models exist
         total_used_amount = get_user_total_used_amount(user.id)
         total_deposited_amount = get_user_total_deposited_amount(user.id)
 
         # Create user info dict
         user_info = {
             "id": str(user.id),
-            "username": user.username,
             "email": user.email,
-            "role": user.role,
-            "block": user.block,
-            "time_created": user.time_created,
-            "balance": user.balance,
+            "name": user.name,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
             "total_used_amount": total_used_amount,
             "total_deposited_amount": total_deposited_amount
         }
@@ -72,24 +70,21 @@ def get_all_user():
 
 
 def get_user(user_id):
-    user = UserModel.query.filter(UserModel.id == user_id, UserModel.deleted_at.is_(None)).first()
+    user = UserModel.query.filter(UserModel.id == user_id).first()
 
     if not user:
         return None
 
-    # Calculate additional amounts
+    # Calculate additional amounts if AI usage and transaction models exist
     total_used_amount = get_user_total_used_amount(user.id)
     total_deposited_amount = get_user_total_deposited_amount(user.id)
 
     # Return user info with additional fields
     user_info = {
         "id": str(user.id),
-        "username": user.username,
         "email": user.email,
-        "role": user.role,
-        "block": user.block,
-        "time_created": user.time_created,
-        "balance": user.balance,
+        "name": user.name,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
         "total_used_amount": total_used_amount,
         "total_deposited_amount": total_deposited_amount
     }
@@ -98,23 +93,22 @@ def get_user(user_id):
 
 
 def update_user(user_data, user_id):
-    user = UserModel.query.filter(UserModel.id == user_id, UserModel.deleted_at.is_(None)).first()
+    user = UserModel.query.filter(UserModel.id == user_id).first()
     if not user:
         logger.error("User doesn't exist, cannot update!")
         abort(400, message="User doesn't exist, cannot update!")
 
     try:
-        if user_data["username"]:
-            user.username = user_data["username"]
+        if user_data.get("email"):
+            user.email = user_data["email"]
 
-        if user_data["password"]:
+        if user_data.get("name"):
+            user.name = user_data["name"]
+
+        if user_data.get("password"):
             # Hash password
             password = pbkdf2_sha256.hash(user_data["password"])
             user.password = password
-
-        # Update role if provided
-        if "role" in user_data and user_data["role"]:
-            user.role = user_data["role"]
 
         db.session.commit()
     except Exception as ex:
@@ -173,8 +167,8 @@ def delete_user(id):
 
 
 def login_user(user_data):
-    # Check user by email
-    user = UserModel.query.filter(UserModel.email == user_data["email"], UserModel.deleted_at.is_(None)).first()
+    # Check user by email with joined user_profile
+    user = UserModel.query.filter(UserModel.email == user_data["email"]).first()
 
     # Verify
     if user and pbkdf2_sha256.verify(user_data["password"], user.password):
@@ -186,21 +180,29 @@ def login_user(user_data):
 
         logger.info(f"User login successfully! email: {user_data['email']}")
 
-        # Calculate additional amounts
+        # Calculate additional amounts if models exist
         total_used_amount = get_user_total_used_amount(user.id)
         total_deposited_amount = get_user_total_deposited_amount(user.id)
 
-        # Return user info without password
+        # Get user profile information
+        profile = user.user_profile
+
+        # Return user info with profile data (without password)
         user_info = {
             "id": str(user.id),
-            "username": user.username,
             "email": user.email,
-            "role": user.role,
-            "block": user.block,
-            "time_created": user.time_created,
-            "balance": user.balance,
+            "name": user.name,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
             "total_used_amount": total_used_amount,
-            "total_deposited_amount": total_deposited_amount
+            "total_deposited_amount": total_deposited_amount,
+            "profile": {
+                "age": profile.age if profile else None,
+                "gender": profile.gender.value if profile and profile.gender else None,
+                "height_cm": profile.height_cm if profile else None,
+                "weight_kg": profile.weight_kg if profile else None,
+                "activity_level": profile.activity_level.value if profile and profile.activity_level else None,
+                "updated_at": profile.updated_at.isoformat() if profile and profile.updated_at else None
+            } if profile else None
         }
 
         return {
@@ -214,18 +216,12 @@ def login_user(user_data):
 
 
 def register_user(user_data):
-    username = user_data["username"]
     email = user_data["email"]
     password = user_data["password"]
-
-    # Check user name exist
-    user = UserModel.query.filter(UserModel.username == user_data["username"], UserModel.deleted_at.is_(None)).first()
-    if user:
-        logger.error("Username already exists.")
-        abort(400, message="Username already exists.")
+    name = user_data.get("name")
 
     # Check email exist
-    user = UserModel.query.filter(UserModel.email == email, UserModel.deleted_at.is_(None)).first()
+    user = UserModel.query.filter(UserModel.email == email).first()
     if user:
         logger.error("Email already exists.")
         abort(400, message="Email already exists.")
@@ -233,7 +229,7 @@ def register_user(user_data):
     # Hash password
     password = pbkdf2_sha256.hash(password)
 
-    new_user = UserModel(username=username, email=email, password=password)
+    new_user = UserModel(email=email, password=password, name=name)
 
     try:
         db.session.add(new_user)
@@ -243,8 +239,6 @@ def register_user(user_data):
         db.session.rollback()
         logger.error(f"Can not register! Error: {ex}")
         abort(400, message=f"Can not register! Error: {ex}")
-
-    # Default role is already set in UserModel (role=2 for regular user)
 
     return {"message": "Register successfully!"}
 
@@ -274,29 +268,37 @@ def get_current_user():
     """
     # Get user ID from JWT token
     current_user_id = get_jwt_identity()
-    
-    # Query user from database
-    user = UserModel.query.filter(UserModel.id == current_user_id, UserModel.deleted_at.is_(None)).first()
-    
+
+    # Query user from database with joined profile
+    user = UserModel.query.filter(UserModel.id == current_user_id).first()
+
     if not user:
         logger.error("User not found!")
         abort(404, message="User not found!")
 
-    # Calculate additional amounts
+    # Calculate additional amounts if models exist
     total_used_amount = get_user_total_used_amount(user.id)
     total_deposited_amount = get_user_total_deposited_amount(user.id)
 
-    # Return user info without password
+    # Get user profile information
+    profile = user.user_profile
+
+    # Return user info with profile data (without password)
     user_info = {
         "id": str(user.id),
-        "username": user.username,
         "email": user.email,
-        "role": user.role,
-        "block": user.block,
-        "time_created": user.time_created,
-        "balance": user.balance,
+        "name": user.name,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
         "total_used_amount": total_used_amount,
-        "total_deposited_amount": total_deposited_amount
+        "total_deposited_amount": total_deposited_amount,
+        "profile": {
+            "age": profile.age if profile else None,
+            "gender": profile.gender.value if profile and profile.gender else None,
+            "height_cm": profile.height_cm if profile else None,
+            "weight_kg": profile.weight_kg if profile else None,
+            "activity_level": profile.activity_level.value if profile and profile.activity_level else None,
+            "updated_at": profile.updated_at.isoformat() if profile and profile.updated_at else None
+        } if profile else None
     }
 
     return user_info
@@ -304,46 +306,30 @@ def get_current_user():
 
 def upgrade_guest(guest_data):
     """
-    Upgrade a guest (role=3) to a regular user (role=2)
-    Requires email and password verification, and new username
+    Upgrade a guest to a regular user - simplified version
+    Requires email and password verification, and new name
     """
     email = guest_data["email"]
-    username = guest_data["username"]
+    name = guest_data["name"]
     password = guest_data["password"]
 
     # Find user by email
-    user = UserModel.query.filter(UserModel.email == email, UserModel.deleted_at.is_(None)).first()
+    user = UserModel.query.filter(UserModel.email == email).first()
     if not user:
         logger.error(f"User with email {email} not found")
         abort(404, message="User not found")
 
-    # Check if user is a guest (role = 3)
-    if user.role != 3:
-        logger.error(f"User {email} is not a guest (current role: {user.role})")
-        abort(400, message="Only guest accounts can be upgraded")
-
-    # Check if new username already exists (excluding current user)
-    existing_user = UserModel.query.filter(
-        UserModel.username == username,
-        UserModel.id != user.id,
-        UserModel.deleted_at.is_(None)
-    ).first()
-    if existing_user:
-        logger.error(f"Username {username} already exists")
-        abort(400, message="Username already exists")
-
     # Verify password
     if not pbkdf2_sha256.verify(password, user.password):
-        logger.error(f"Invalid password for guest {email}")
+        logger.error(f"Invalid password for user {email}")
         abort(401, message="Invalid password")
 
     try:
-        # Update username and upgrade role from guest (3) to user (2)
-        user.username = username
-        user.role = 2
+        # Update name
+        user.name = name
         db.session.commit()
 
-        logger.info(f"Successfully upgraded guest {email} to user with username {username}")
+        logger.info(f"Successfully updated user {email} with name {name}")
 
         # Return user info after upgrade
         total_used_amount = get_user_total_used_amount(user.id)
@@ -351,25 +337,22 @@ def upgrade_guest(guest_data):
 
         user_info = {
             "id": str(user.id),
-            "username": user.username,
             "email": user.email,
-            "role": user.role,
-            "block": user.block,
-            "time_created": user.time_created,
-            "balance": user.balance,
+            "name": user.name,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
             "total_used_amount": total_used_amount,
             "total_deposited_amount": total_deposited_amount
         }
 
         return {
-            "message": f"Guest upgraded to user successfully with username: {username}",
+            "message": f"User updated successfully with name: {name}",
             "user": user_info
         }
 
     except Exception as ex:
         db.session.rollback()
-        logger.error(f"Failed to upgrade guest {email}: {ex}")
-        abort(500, message=f"Failed to upgrade guest: {ex}")
+        logger.error(f"Failed to update user {email}: {ex}")
+        abort(500, message=f"Failed to update user: {ex}")
 
 
 def add_jti_blocklist(jti):

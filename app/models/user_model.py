@@ -1,17 +1,22 @@
 from datetime import datetime
+from uuid import uuid4
 
 from app.db import db
 
 
 class UserModel(db.Model):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(), nullable=False)
-    role = db.Column(db.Integer, default=2)  # 1: admin, 2: user, 3: guest
-    block = db.Column(db.Boolean, default=False)
-    balance = db.Column(db.Float, default=0.0)  # Số dư tài khoản
-    time_created = db.Column(db.String(), default=datetime.now())
-    deleted_at = db.Column(db.DateTime, nullable=True)
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid4()))
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password = db.Column(db.String(255))
+    name = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user_profile = db.relationship("UserProfileModel", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    goals = db.relationship("GoalModel", back_populates="user", cascade="all, delete-orphan")
+    food_logs = db.relationship("FoodLogModel", back_populates="user", cascade="all, delete-orphan")
+    workout_logs = db.relationship("WorkoutLogModel", back_populates="user", cascade="all, delete-orphan")
+    water_logs = db.relationship("WaterLogModel", back_populates="user", cascade="all, delete-orphan")
+    ai_messages = db.relationship("AIMessageModel", back_populates="user", cascade="all, delete-orphan")
