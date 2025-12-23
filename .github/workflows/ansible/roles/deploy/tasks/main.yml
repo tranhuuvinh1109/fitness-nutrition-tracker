@@ -1,0 +1,28 @@
+- name: "Creates directory"
+  file:
+    path: "/home/ubuntu/server"
+    state: "directory"
+    mode: 0755
+
+- name: "Copy compressed app folder"
+  copy:
+    src: "artifact.zip"
+    dest: "/home/ubuntu/server/artifact.zip"
+
+- name: "Extract app"
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "/home/ubuntu/server/artifact.zip"
+    dest: "/home/ubuntu/server"
+
+- name: Pull flask template image
+  community.docker.docker_image:
+    name: "{{ flask_template_image }}"
+    tag: "{{ flask_template_tag }}"
+    source: pull
+
+- name: Run docker compose
+  become: True
+  shell:
+    chdir: /home/ubuntu/server
+    cmd: "docker compose up -d"
