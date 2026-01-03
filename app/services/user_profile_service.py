@@ -39,7 +39,9 @@ def create_user_profile(user_id, profile_data):
             gender=profile_data.get("gender"),
             height_cm=profile_data.get("height_cm"),
             weight_kg=profile_data.get("weight_kg"),
-            activity_level=profile_data.get("activity_level")
+            activity_level=profile_data.get("activity_level"),
+            bmi=profile_data.get("bmi"),
+            target=profile_data.get("target")
         )
 
         db.session.add(profile)
@@ -75,6 +77,10 @@ def update_user_profile(user_id, profile_data):
             profile.weight_kg = profile_data["weight_kg"]
         if "activity_level" in profile_data:
             profile.activity_level = profile_data["activity_level"]
+        if "bmi" in profile_data:
+            profile.bmi = profile_data["bmi"]
+        if "target" in profile_data:
+            profile.target = profile_data["target"]
 
         db.session.commit()
 

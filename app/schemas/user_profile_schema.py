@@ -8,6 +8,8 @@ class PlainUserProfileSchema(Schema):
     height_cm = fields.Float(validate=validate.Range(min=0, max=300), allow_none=True)
     weight_kg = fields.Float(validate=validate.Range(min=0, max=500), allow_none=True)
     activity_level = fields.Str(validate=validate.OneOf(['low', 'medium', 'high']), allow_none=True)
+    bmi = fields.Float(allow_none=True)
+    target = fields.Raw(allow_none=True)  # JSON field
     updated_at = fields.DateTime(dump_only=True)
 
 
@@ -17,6 +19,8 @@ class UserProfileUpdateSchema(Schema):
     height_cm = fields.Float(validate=validate.Range(min=0, max=300), allow_none=True, required=True)
     weight_kg = fields.Float(validate=validate.Range(min=0, max=500), allow_none=True, required=True)
     activity_level = fields.Str(validate=validate.OneOf(['low', 'medium', 'high']), allow_none=True, required=True)
+    bmi = fields.Float(allow_none=True, required=True)
+    target = fields.Raw(allow_none=True, required=True)  # JSON field
 
 
 class UserProfileResponseSchema(PlainUserProfileSchema):

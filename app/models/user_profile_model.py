@@ -14,6 +14,8 @@ class UserProfileModel(db.Model):
     weight_kg = db.Column(db.Float)
     activity_level = db.Column(db.Enum(ActivityLevelEnum), nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    bmi = db.Column(db.Float, nullable=True)
+    target = db.Column(db.JSON, nullable=True)
 
     # Relationship
     user = db.relationship("UserModel", back_populates="user_profile")

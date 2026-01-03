@@ -16,8 +16,7 @@ class FoodList(MethodView):
     @blp.response(200, FoodResponseSchema(many=True))
     def get(self):
         """Get all foods"""
-        is_vietnamese = self.request.args.get('is_vietnamese', type=bool)
-        result = food_service.get_all_foods(is_vietnamese=is_vietnamese)
+        result = food_service.get_all_foods()
         return result
 
     @blp.arguments(FoodCreateSchema)

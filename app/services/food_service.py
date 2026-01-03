@@ -9,15 +9,11 @@ from app.models.food_model import FoodModel
 logger = logging.getLogger(__name__)
 
 
-def get_all_foods(is_vietnamese=None):
+def get_all_foods():
     """
     Get all foods, optionally filtered by is_vietnamese
     """
-    query = FoodModel.query
-    if is_vietnamese is not None:
-        query = query.filter_by(is_vietnamese=is_vietnamese)
-
-    foods = query.all()
+    foods = FoodModel.query.all()
     return foods
 
 

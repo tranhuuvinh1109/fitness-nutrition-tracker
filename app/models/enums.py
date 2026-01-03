@@ -28,3 +28,9 @@ class WorkoutTypeEnum(Enum):
 class AIRoleEnum(Enum):
     user = "user"
     ai = "ai"
+
+class MealTypeEnum(Enum):
+    breakfast = "breakfast"
+    lunch = "lunch"
+    dinner = "dinner"
+    snack = "snack"

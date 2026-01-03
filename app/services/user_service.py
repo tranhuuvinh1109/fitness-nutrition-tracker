@@ -158,6 +158,8 @@ def login_user(user_data):
                 "height_cm": profile.height_cm if profile else None,
                 "weight_kg": profile.weight_kg if profile else None,
                 "activity_level": profile.activity_level.value if profile and profile.activity_level else None,
+                "bmi": profile.bmi if profile else None,
+                "target": profile.target if profile else None,
                 "updated_at": profile.updated_at.isoformat() if profile and profile.updated_at else None
             } if profile else None
         }
@@ -241,14 +243,16 @@ def get_current_user():
         "id": str(user.id),
         "email": user.email,
         "name": user.name,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
         "role": user.role,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
         "profile": {
             "age": profile.age if profile else None,
             "gender": profile.gender.value if profile and profile.gender else None,
             "height_cm": profile.height_cm if profile else None,
             "weight_kg": profile.weight_kg if profile else None,
             "activity_level": profile.activity_level.value if profile and profile.activity_level else None,
+            "bmi": profile.bmi if profile else None,
+            "target": profile.target if profile else None,
             "updated_at": profile.updated_at.isoformat() if profile and profile.updated_at else None
         } if profile else None
     }

@@ -53,6 +53,7 @@ def create_food_log(user_id, food_log_data):
         food_log = FoodLogModel(
             user_id=user_id,
             food_id=food_log_data["food_id"],
+            meal_type=food_log_data.get("meal_type"),
             quantity=food_log_data.get("quantity", 1.0),
             log_date=food_log_data["log_date"]
         )
