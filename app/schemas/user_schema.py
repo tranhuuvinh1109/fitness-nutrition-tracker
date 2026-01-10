@@ -65,3 +65,9 @@ class UserLoginSchema(Schema):
     access_token = fields.Str()
     refresh_token = fields.Str()
     user = fields.Nested(UserResponseSchema)
+
+
+class UserGetCurrentSchema(Schema):
+    access_token = fields.Str()
+    refresh_token = fields.Str()
+    user = fields.Nested(UserResponseSchema)

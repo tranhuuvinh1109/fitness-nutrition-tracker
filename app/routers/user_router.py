@@ -6,6 +6,7 @@ from app.schemas.user_schema import (
     UserLoginInputSchema,
     UserRegisterSchema,
     UserResponseSchema,
+    UserGetCurrentSchema,
 )
 from app.services import user_service
 
@@ -31,7 +32,7 @@ class Register(MethodView):
 @blp.route("/me")
 class Me(MethodView):
     @jwt_required()
-    @blp.response(200, UserResponseSchema)
+    @blp.response(200, UserGetCurrentSchema)
     def get(self):
         """Get current user information from access token"""
         result = user_service.get_current_user()

@@ -14,6 +14,7 @@ from app.db import db
 from app.models.blocklist_model import BlocklistModel
 from app.models.user_model import UserModel
 from app.models.user_profile_model import UserProfileModel
+from app.services import user_profile_service
 
 # Create logger for this module
 logger = logging.getLogger(__name__)
@@ -180,27 +181,34 @@ def register_user(user_data):
     name = user_data.get("name")
 
     # Check email exist
-    user = UserModel.query.filter(UserModel.email == email).first()
-    if user:
+    if UserModel.query.filter_by(email=email).first():
         logger.error("Email already exists.")
         abort(400, message="Email already exists.")
 
     # Hash password
-    password = pbkdf2_sha256.hash(password)
+    hashed_password = pbkdf2_sha256.hash(password)
 
-    new_user = UserModel(email=email, password=password, name=name)
+    new_user = UserModel(
+        email=email,
+        password=hashed_password,
+        name=name
+    )
 
     try:
         db.session.add(new_user)
         db.session.commit()
+
+        user_profile_service.create_user_profile(new_user.id, {})
 
     except Exception as ex:
         db.session.rollback()
         logger.error(f"Can not register! Error: {ex}")
         abort(400, message=f"Can not register! Error: {ex}")
 
-    return {"message": "Register successfully!"}
-
+    return {
+        "message": "Register successfully!",
+        "user_id": new_user.id
+    }
 
 def refresh_token():
     # Get id current user
@@ -238,6 +246,12 @@ def get_current_user():
     # Get user profile information
     profile = user.user_profile
 
+    # Create access_token - identity is user ID
+    access_token = create_access_token(identity=user.id, fresh=True)
+
+    # Create refresh_token
+    refresh_token = create_refresh_token(identity=user.id)
+
     # Return user info with profile data (without password)
     user_info = {
         "id": str(user.id),
@@ -257,7 +271,11 @@ def get_current_user():
         } if profile else None
     }
 
-    return user_info
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "user": user_info
+    }
 
 
 
