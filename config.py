@@ -56,6 +56,9 @@ class DefaultConfig:
     DATE_FMT = "%Y-%m-%d %H:%M:%S"
     LOG_FILE_API = f"{basedir}/logs/api.log"
 
+    # OpenAI Configuration
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
 
 class DevelopConfig(DefaultConfig):
     # App environment

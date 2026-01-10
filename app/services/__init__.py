@@ -6,6 +6,7 @@ from app.services import (
     food_log_service,
     workout_service,
     workout_log_service,
+    workout_suggestion_service,
     water_log_service,
     ai_message_service,
 )

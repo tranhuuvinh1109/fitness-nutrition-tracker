@@ -7,6 +7,7 @@ from app.routers.food_router import blp as FoodBlueprint
 from app.routers.food_log_router import blp as FoodLogBlueprint
 from app.routers.workout_router import blp as WorkoutBlueprint
 from app.routers.workout_log_router import blp as WorkoutLogBlueprint
+from app.routers.workout_suggestion_router import blp as WorkoutSuggestionBlueprint
 from app.routers.water_log_router import blp as WaterLogBlueprint
 from app.routers.ai_message_router import blp as AIMessageBlueprint
 
@@ -21,5 +22,6 @@ def register_routing(app):
     api.register_blueprint(FoodLogBlueprint)
     api.register_blueprint(WorkoutBlueprint)
     api.register_blueprint(WorkoutLogBlueprint)
+    api.register_blueprint(WorkoutSuggestionBlueprint)
     api.register_blueprint(WaterLogBlueprint)
     api.register_blueprint(AIMessageBlueprint)
