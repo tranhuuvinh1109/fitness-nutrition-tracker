@@ -131,16 +131,17 @@ Lưu ý:
 
             # Validate workout type and convert to integer
             try:
-                workout_type_enum = WorkoutTypeEnum(workout_data["type"].lower())
+                workout_type_str = workout_data["type"].lower()
+                workout_type_enum = WorkoutTypeEnum(workout_type_str)
                 # Map enum to integer: 0: cardio, 1: strength, 2: flexibility
                 workout_type_map = {
-                    WorkoutTypeEnum.CARDIO: 0,
-                    WorkoutTypeEnum.STRENGTH: 1,
-                    WorkoutTypeEnum.FLEXIBILITY: 2
+                    WorkoutTypeEnum.cardio: 0,
+                    WorkoutTypeEnum.strength: 1,
+                    WorkoutTypeEnum.flexibility: 2
                 }
                 workout_type_int = workout_type_map.get(workout_type_enum, 0)
-            except (ValueError, AttributeError):
-                logger.error(f"Invalid workout type: {workout_data.get('type')}")
+            except (ValueError, AttributeError) as e:
+                logger.error(f"Invalid workout type: {workout_data.get('type')}, error: {e}")
                 continue  # Skip this workout if type is invalid
 
             # Calculate log date based on day_of_week
@@ -164,13 +165,13 @@ Lưu ý:
                 # Create workout log
                 workout_log = WorkoutLogModel(
                     user_id=user_id,
-                    workout_id=None,  # No longer required
                     duration_min=workout_data["duration_min"],
                     calories_burned=workout_data.get("calories_burned"),
                     log_date=log_date,
                     status=0,  # Default to planned
                     workout_type=workout_type_int,
-                    workout_metadata=workout_metadata
+                    workout_metadata=workout_metadata,
+                    description=workout_data.get("description", "")
                 )
                 db.session.add(workout_log)
                 created_logs.append(workout_log)
@@ -180,6 +181,7 @@ Lưu ý:
                 existing_log.calories_burned = workout_data.get("calories_burned")
                 existing_log.workout_type = workout_type_int
                 existing_log.workout_metadata = workout_metadata
+                existing_log.description = workout_data.get("description", "")
                 created_logs.append(existing_log)
 
             created_workouts.append({

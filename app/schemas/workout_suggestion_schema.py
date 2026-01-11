@@ -25,6 +25,7 @@ class WorkoutSuggestionLogInfoSchema(Schema):
     note = fields.Str(allow_none=True, dump_only=True)
     workout_type = fields.Int(dump_only=True)
     workout_metadata = fields.Dict(allow_none=True, dump_only=True)
+    description = fields.Str(allow_none=True, dump_only=True)
     created_at = fields.DateTime(dump_only=True)
 
 

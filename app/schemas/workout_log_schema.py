@@ -12,6 +12,7 @@ class PlainWorkoutLogSchema(Schema):
     note = fields.Str(allow_none=True)
     workout_type = fields.Int(validate=validate.OneOf([0, 1, 2]), allow_none=True)  # 0: cardio | 1: strength | 2: flexibility
     workout_metadata = fields.Dict(allow_none=True)
+    description = fields.Str(allow_none=True)
     created_at = fields.DateTime(dump_only=True)
 
 
@@ -24,6 +25,7 @@ class WorkoutLogCreateSchema(Schema):
     note = fields.Str(allow_none=True)
     workout_type = fields.Int(validate=validate.OneOf([0, 1, 2]), allow_none=True)  # 0: cardio | 1: strength | 2: flexibility
     workout_metadata = fields.Dict(allow_none=True)
+    description = fields.Str(allow_none=True)
 
 
 class WorkoutLogUpdateSchema(Schema):
@@ -35,6 +37,7 @@ class WorkoutLogUpdateSchema(Schema):
     note = fields.Str(allow_none=True)
     workout_type = fields.Int(validate=validate.OneOf([0, 1, 2]), allow_none=True)  # 0: cardio | 1: strength | 2: flexibility
     workout_metadata = fields.Dict(allow_none=True)
+    description = fields.Str(allow_none=True)
 
 
 class WorkoutLogResponseSchema(PlainWorkoutLogSchema):
