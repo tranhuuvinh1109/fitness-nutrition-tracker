@@ -16,7 +16,7 @@ class WorkoutLogModel(db.Model):
     status = db.Column(
         db.Integer,
         default=0
-    ) # 0: planned | 1: completed | 1: skipped
+    ) # 0: planned | 1: completed | 2: skipped
     note = db.Column(
         db.Text,
         nullable=True

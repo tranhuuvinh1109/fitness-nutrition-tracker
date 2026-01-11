@@ -1,24 +1,45 @@
 from flask.views import MethodView
-from flask_smorest import Blueprint
+from flask_jwt_extended import get_jwt_identity
+from flask_smorest import Blueprint, abort
 
 from app.schemas.workout_schema import (
     WorkoutCreateSchema,
     WorkoutResponseSchema,
-    WorkoutUpdateSchema
+    WorkoutUpdateSchema,
+    WorkoutWithLogsSchema
 )
 from app.services import workout_service
+from flask_jwt_extended import verify_jwt_in_request
 
 blp = Blueprint("Workout", __name__, description="Workout API")
 
 
 @blp.route("/workouts")
 class WorkoutList(MethodView):
-    @blp.response(200, WorkoutResponseSchema(many=True))
+    @jwt_required()
     def get(self):
-        """Get all workouts"""
+        """Get all workouts. If start_day or end_day is provided, returns workouts with user's workout logs (requires authentication)"""
         workout_type = self.request.args.get('type')
-        result = workout_service.get_all_workouts(workout_type=workout_type)
-        return result
+        start_day = self.request.args.get('start_day')
+        end_day = self.request.args.get('end_day')
+        
+        # If start_day or end_day is provided, require authentication and return workouts with logs
+        if start_day or end_day:
+            user_id = get_jwt_identity()
+            result = workout_service.get_all_workouts_with_logs(
+                user_id=user_id,
+                workout_type=workout_type,
+                start_day=start_day,
+                end_day=end_day
+            )
+            # Return with WorkoutWithLogsSchema - manually serialize since we can't use decorator conditionally
+            schema = WorkoutWithLogsSchema(many=True)
+            return schema.dump(result)
+        else:
+            # Normal case - return workouts without logs
+            result = workout_service.get_all_workouts(workout_type=workout_type)
+            schema = WorkoutResponseSchema(many=True)
+            return schema.dump(result)
 
     @blp.arguments(WorkoutCreateSchema)
     @blp.response(201, WorkoutResponseSchema)

@@ -55,7 +55,9 @@ def create_workout_log(user_id, workout_log_data):
             workout_id=workout_log_data["workout_id"],
             duration_min=workout_log_data["duration_min"],
             calories_burned=workout_log_data.get("calories_burned"),
-            log_date=workout_log_data["log_date"]
+            log_date=workout_log_data["log_date"],
+            status=workout_log_data.get("status", 0),
+            note=workout_log_data.get("note")
         )
 
         db.session.add(workout_log)
@@ -96,6 +98,10 @@ def update_workout_log(workout_log_id, workout_log_data):
             workout_log.calories_burned = workout_log_data["calories_burned"]
         if "log_date" in workout_log_data:
             workout_log.log_date = workout_log_data["log_date"]
+        if "status" in workout_log_data:
+            workout_log.status = workout_log_data["status"]
+        if "note" in workout_log_data:
+            workout_log.note = workout_log_data["note"]
 
         db.session.commit()
 

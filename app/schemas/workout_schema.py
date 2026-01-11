@@ -22,3 +22,7 @@ class WorkoutUpdateSchema(Schema):
 
 class WorkoutResponseSchema(PlainWorkoutSchema):
     pass
+
+
+class WorkoutWithLogsSchema(PlainWorkoutSchema):
+    workout_logs = fields.Nested('PlainWorkoutLogSchema', many=True, dump_only=True)
