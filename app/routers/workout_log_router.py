@@ -18,12 +18,20 @@ class WorkoutLogList(MethodView):
     @jwt_required()
     @blp.response(200, WorkoutLogResponseSchema(many=True))
     def get(self):
-        """Get all workout logs for current user"""
+        """Get all workout logs for current user. Can filter by log_date or date range (start_day, end_day)"""
         from flask_jwt_extended import get_jwt_identity
         user_id = get_jwt_identity()
 
         log_date = request.args.get('log_date')
-        result = workout_log_service.get_all_workout_logs(user_id=user_id, log_date=log_date)
+        start_day = request.args.get('start_day')
+        end_day = request.args.get('end_day')
+        
+        result = workout_log_service.get_all_workout_logs(
+            user_id=user_id, 
+            log_date=log_date,
+            start_day=start_day,
+            end_day=end_day
+        )
         return result
 
     @jwt_required()
