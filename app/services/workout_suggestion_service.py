@@ -7,7 +7,6 @@ from flask_smorest import abort
 from openai import OpenAI
 
 from app.db import db
-from app.models.workout_model import WorkoutModel
 from app.models.workout_log_model import WorkoutLogModel
 from app.models.enums import WorkoutTypeEnum
 from app.services import user_profile_service, workout_service, workout_log_service
@@ -130,49 +129,48 @@ Lưu ý:
                 logger.error(f"Missing required fields in workout data: {workout_data}")
                 continue  # Skip this workout if required fields are missing
 
-            # Validate workout type
+            # Validate workout type and convert to integer
             try:
-                workout_type = WorkoutTypeEnum(workout_data["type"].lower())
+                workout_type_enum = WorkoutTypeEnum(workout_data["type"].lower())
+                # Map enum to integer: 0: cardio, 1: strength, 2: flexibility
+                workout_type_map = {
+                    WorkoutTypeEnum.CARDIO: 0,
+                    WorkoutTypeEnum.STRENGTH: 1,
+                    WorkoutTypeEnum.FLEXIBILITY: 2
+                }
+                workout_type_int = workout_type_map.get(workout_type_enum, 0)
             except (ValueError, AttributeError):
                 logger.error(f"Invalid workout type: {workout_data.get('type')}")
                 continue  # Skip this workout if type is invalid
-
-            # Check if workout exists, if not create it
-            workout = WorkoutModel.query.filter_by(
-                name=workout_data["name"],
-                type=workout_type
-            ).first()
-
-            if not workout:
-                # Create new workout
-                workout = WorkoutModel(
-                    name=workout_data["name"],
-                    type=workout_type,
-                    met=None  # Can be calculated later if needed
-                )
-                db.session.add(workout)
-                db.session.flush()  # Get the ID without committing
-                logger.info(f"Created new workout: {workout.name} ({workout.type.value})")
 
             # Calculate log date based on day_of_week
             day_offset = workout_data["day_of_week"] - 1  # Convert to 0-6
             log_date = start_date + timedelta(days=day_offset)
 
-            # Check if workout log already exists for this date
+            # Prepare workout metadata
+            workout_metadata = {
+                "name": workout_data["name"],
+                "description": workout_data.get("description", "")
+            }
+
+            # Check if workout log already exists for this date and workout type
             existing_log = WorkoutLogModel.query.filter_by(
                 user_id=user_id,
-                workout_id=workout.id,
-                log_date=log_date
+                log_date=log_date,
+                workout_type=workout_type_int
             ).first()
 
             if not existing_log:
                 # Create workout log
                 workout_log = WorkoutLogModel(
                     user_id=user_id,
-                    workout_id=workout.id,
+                    workout_id=None,  # No longer required
                     duration_min=workout_data["duration_min"],
                     calories_burned=workout_data.get("calories_burned"),
-                    log_date=log_date
+                    log_date=log_date,
+                    status=0,  # Default to planned
+                    workout_type=workout_type_int,
+                    workout_metadata=workout_metadata
                 )
                 db.session.add(workout_log)
                 created_logs.append(workout_log)
@@ -180,11 +178,14 @@ Lưu ý:
                 # Update existing log
                 existing_log.duration_min = workout_data["duration_min"]
                 existing_log.calories_burned = workout_data.get("calories_burned")
+                existing_log.workout_type = workout_type_int
+                existing_log.workout_metadata = workout_metadata
                 created_logs.append(existing_log)
 
             created_workouts.append({
-                "workout": workout,
                 "log": created_logs[-1] if created_logs else None,
+                "name": workout_data["name"],
+                "type": workout_data["type"],
                 "description": workout_data.get("description", ""),
                 "day_of_week": workout_data["day_of_week"]
             })

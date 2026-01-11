@@ -1,3 +1,4 @@
+from flask import request
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint
@@ -5,8 +6,7 @@ from flask_smorest import Blueprint
 from app.schemas.workout_log_schema import (
     WorkoutLogCreateSchema,
     WorkoutLogResponseSchema,
-    WorkoutLogUpdateSchema,
-    WorkoutLogWithWorkoutSchema
+    WorkoutLogUpdateSchema
 )
 from app.services import workout_log_service
 
@@ -16,13 +16,13 @@ blp = Blueprint("WorkoutLog", __name__, description="Workout Log API")
 @blp.route("/workout-logs")
 class WorkoutLogList(MethodView):
     @jwt_required()
-    @blp.response(200, WorkoutLogWithWorkoutSchema(many=True))
+    @blp.response(200, WorkoutLogResponseSchema(many=True))
     def get(self):
         """Get all workout logs for current user"""
         from flask_jwt_extended import get_jwt_identity
         user_id = get_jwt_identity()
 
-        log_date = self.request.args.get('log_date')
+        log_date = request.args.get('log_date')
         result = workout_log_service.get_all_workout_logs(user_id=user_id, log_date=log_date)
         return result
 
@@ -41,7 +41,7 @@ class WorkoutLogList(MethodView):
 @blp.route("/workout-logs/<workout_log_id>")
 class WorkoutLog(MethodView):
     @jwt_required()
-    @blp.response(200, WorkoutLogWithWorkoutSchema)
+    @blp.response(200, WorkoutLogResponseSchema)
     def get(self, workout_log_id):
         """Get workout log by ID"""
         result = workout_log_service.get_workout_log(workout_log_id)

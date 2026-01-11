@@ -17,16 +17,21 @@ class WorkoutSuggestionWorkoutInfoSchema(Schema):
 class WorkoutSuggestionLogInfoSchema(Schema):
     id = fields.Str(dump_only=True)
     user_id = fields.Str(dump_only=True)
-    workout_id = fields.Str(dump_only=True)
+    workout_id = fields.Str(allow_none=True, dump_only=True)
     duration_min = fields.Int(dump_only=True)
     calories_burned = fields.Int(allow_none=True, dump_only=True)
     log_date = fields.Date(dump_only=True)
+    status = fields.Int(dump_only=True)
+    note = fields.Str(allow_none=True, dump_only=True)
+    workout_type = fields.Int(dump_only=True)
+    workout_metadata = fields.Dict(allow_none=True, dump_only=True)
     created_at = fields.DateTime(dump_only=True)
 
 
 class WorkoutSuggestionItemSchema(Schema):
-    workout = fields.Nested(WorkoutSuggestionWorkoutInfoSchema, dump_only=True)
     log = fields.Nested(WorkoutSuggestionLogInfoSchema, allow_none=True, dump_only=True)
+    name = fields.Str(dump_only=True)
+    type = fields.Str(dump_only=True)
     description = fields.Str(dump_only=True)
     day_of_week = fields.Int(dump_only=True)
 

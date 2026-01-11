@@ -5,7 +5,6 @@ from flask_smorest import abort
 
 from app.db import db
 from app.models.workout_log_model import WorkoutLogModel
-from app.models.workout_model import WorkoutModel
 
 # Create logger for this module
 logger = logging.getLogger(__name__)
@@ -43,21 +42,17 @@ def create_workout_log(user_id, workout_log_data):
     """
     Create a new workout log
     """
-    # Validate workout exists
-    workout = WorkoutModel.query.filter_by(id=workout_log_data["workout_id"]).first()
-    if not workout:
-        logger.error(f"Workout not found with id: {workout_log_data['workout_id']}")
-        abort(400, message="Workout not found")
-
     try:
         workout_log = WorkoutLogModel(
             user_id=user_id,
-            workout_id=workout_log_data["workout_id"],
+            workout_id=workout_log_data.get("workout_id"),
             duration_min=workout_log_data["duration_min"],
             calories_burned=workout_log_data.get("calories_burned"),
             log_date=workout_log_data["log_date"],
             status=workout_log_data.get("status", 0),
-            note=workout_log_data.get("note")
+            note=workout_log_data.get("note"),
+            workout_type=workout_log_data.get("workout_type", 0),
+            workout_metadata=workout_log_data.get("workout_metadata")
         )
 
         db.session.add(workout_log)
@@ -82,13 +77,6 @@ def update_workout_log(workout_log_id, workout_log_data):
         logger.error(f"Workout log not found with id: {workout_log_id}")
         abort(404, message="Workout log not found")
 
-    # Validate workout exists if workout_id is being updated
-    if "workout_id" in workout_log_data:
-        workout = WorkoutModel.query.filter_by(id=workout_log_data["workout_id"]).first()
-        if not workout:
-            logger.error(f"Workout not found with id: {workout_log_data['workout_id']}")
-            abort(400, message="Workout not found")
-
     try:
         if "workout_id" in workout_log_data:
             workout_log.workout_id = workout_log_data["workout_id"]
@@ -102,6 +90,10 @@ def update_workout_log(workout_log_id, workout_log_data):
             workout_log.status = workout_log_data["status"]
         if "note" in workout_log_data:
             workout_log.note = workout_log_data["note"]
+        if "workout_type" in workout_log_data:
+            workout_log.workout_type = workout_log_data["workout_type"]
+        if "workout_metadata" in workout_log_data:
+            workout_log.workout_metadata = workout_log_data["workout_metadata"]
 
         db.session.commit()
 

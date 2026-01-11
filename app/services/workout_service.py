@@ -113,14 +113,9 @@ def delete_workout(workout_id):
 
 def get_all_workouts_with_logs(user_id, workout_type=None, start_day=None, end_day=None):
     """
-    Get all workouts with workout logs for a user, optionally filtered by type and date range
+    Get workout logs for a user, optionally filtered by workout_type and date range
+    Returns a list of workout logs grouped by workout type
     """
-    query = WorkoutModel.query
-    if workout_type:
-        query = query.filter_by(type=workout_type)
-
-    workouts = query.all()
-    
     # Parse date strings to date objects if needed
     if start_day and isinstance(start_day, str):
         start_day = datetime.strptime(start_day, '%Y-%m-%d').date()
@@ -128,19 +123,54 @@ def get_all_workouts_with_logs(user_id, workout_type=None, start_day=None, end_d
     if end_day and isinstance(end_day, str):
         end_day = datetime.strptime(end_day, '%Y-%m-%d').date()
     
-    # Filter workout logs by user_id and date range
-    for workout in workouts:
-        log_query = WorkoutLogModel.query.filter_by(
-            workout_id=workout.id,
-            user_id=user_id
-        )
-        
-        if start_day:
-            log_query = log_query.filter(WorkoutLogModel.log_date >= start_day)
-        
-        if end_day:
-            log_query = log_query.filter(WorkoutLogModel.log_date <= end_day)
-        
-        workout.workout_logs = log_query.all()
+    # Query workout logs directly
+    log_query = WorkoutLogModel.query.filter_by(user_id=user_id)
     
-    return workouts
+    # Filter by workout_type if provided (convert string to int if needed)
+    if workout_type:
+        # Map workout type string to integer: 0: cardio, 1: strength, 2: flexibility
+        type_map = {
+            'cardio': 0,
+            'strength': 1,
+            'flexibility': 2
+        }
+        workout_type_int = type_map.get(workout_type.lower(), None)
+        if workout_type_int is not None:
+            log_query = log_query.filter(WorkoutLogModel.workout_type == workout_type_int)
+    
+    if start_day:
+        log_query = log_query.filter(WorkoutLogModel.log_date >= start_day)
+    
+    if end_day:
+        log_query = log_query.filter(WorkoutLogModel.log_date <= end_day)
+    
+    workout_logs = log_query.all()
+    
+    # Group logs by workout_type for response structure
+    # Create a simple structure that mimics workouts with logs
+    from collections import defaultdict
+    
+    grouped_logs = defaultdict(list)
+    
+    for log in workout_logs:
+        # Map workout_type int back to string for grouping
+        type_map = {0: 'cardio', 1: 'strength', 2: 'flexibility'}
+        type_str = type_map.get(log.workout_type, 'cardio')
+        grouped_logs[type_str].append(log)
+    
+    # Create a simple class to hold workout-like structure
+    class WorkoutWithLogs:
+        def __init__(self, workout_type_str, logs):
+            self.id = None
+            self.name = workout_type_str.capitalize()
+            self.type = workout_type_str
+            self.met = None
+            self.workout_logs = logs
+    
+    # Create a list structure compatible with WorkoutWithLogsSchema
+    result = []
+    for type_str, logs in grouped_logs.items():
+        workout_obj = WorkoutWithLogs(type_str, logs)
+        result.append(workout_obj)
+    
+    return result

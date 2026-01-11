@@ -21,6 +21,14 @@ class WorkoutLogModel(db.Model):
         db.Text,
         nullable=True
     )
+    workout_type = db.Column(
+        db.Integer,
+        default=0
+    )  # 0: cardio | 1: strength | 2: flexibility
+    workout_metadata = db.Column(
+        db.JSON,
+        nullable=True
+    )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
