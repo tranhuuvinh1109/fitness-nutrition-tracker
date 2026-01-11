@@ -73,4 +73,11 @@ pip install -r requirements.txt
 
 flask run
 
+flask db migrate -m "..."
+
+# Run migration
+flask run-migration name.sql
+flask db upgrade
+
+
 ```
