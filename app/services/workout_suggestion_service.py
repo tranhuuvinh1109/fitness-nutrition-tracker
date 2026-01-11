@@ -117,12 +117,11 @@ Lưu ý:
         created_workouts = []
         created_logs = []
         
-        # Calculate start date (next Monday or today if Monday)
+        # Calculate start date (Monday of current week)
+        # weekday() returns: 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday
         today = date.today()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        start_date = today + timedelta(days=days_until_monday)
+        days_since_monday = today.weekday()  # 0 if Monday, 1 if Tuesday, etc.
+        start_date = today - timedelta(days=days_since_monday)  # Monday of current week
 
         for workout_data in workout_plan["workouts"]:
             # Validate required fields

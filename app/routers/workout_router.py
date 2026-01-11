@@ -1,5 +1,6 @@
+from flask import request
 from flask.views import MethodView
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_smorest import Blueprint, abort
 
 from app.schemas.workout_schema import (
@@ -9,7 +10,6 @@ from app.schemas.workout_schema import (
     WorkoutWithLogsSchema
 )
 from app.services import workout_service
-from flask_jwt_extended import verify_jwt_in_request
 
 blp = Blueprint("Workout", __name__, description="Workout API")
 
@@ -19,9 +19,9 @@ class WorkoutList(MethodView):
     @jwt_required()
     def get(self):
         """Get all workouts. If start_day or end_day is provided, returns workouts with user's workout logs (requires authentication)"""
-        workout_type = self.request.args.get('type')
-        start_day = self.request.args.get('start_day')
-        end_day = self.request.args.get('end_day')
+        workout_type = request.args.get('type')
+        start_day = request.args.get('start_day')
+        end_day = request.args.get('end_day')
         
         # If start_day or end_day is provided, require authentication and return workouts with logs
         if start_day or end_day:
