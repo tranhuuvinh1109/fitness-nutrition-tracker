@@ -14,6 +14,7 @@ class PlainUserProfileSchema(Schema):
 
 
 class UserProfileUpdateSchema(Schema):
+    user_id = fields.Str( allow_none=True)
     age = fields.Int(validate=validate.Range(min=0, max=150), allow_none=True, required=True)
     gender = fields.Str(validate=validate.OneOf(['male', 'female', 'other']), allow_none=True, required=True)
     height_cm = fields.Float(validate=validate.Range(min=0, max=300), allow_none=True, required=True)

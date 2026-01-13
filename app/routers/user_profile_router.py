@@ -47,12 +47,6 @@ class UserProfileList(MethodView):
         
         user_id = get_jwt_identity()
 
-        # Check if profile already exists
-        existing_profile = user_profile_service.get_user_profile(user_id)
-        if existing_profile:
-            from flask_smorest import abort
-            abort(400, message="User profile already exists")
-
         # Create empty profile - will be updated via PUT
         result = user_profile_service.create_user_profile(user_id, {})
         return result
