@@ -74,7 +74,8 @@ Hãy trả về một kế hoạch tập luyện trong 1 tuần với định d�
             "duration_min": <thời gian tập (phút)>,
             "calories_burned": <calo đốt cháy ước tính>,
             "day_of_week": <1-7, 1=Thứ 2, 7=Chủ nhật>,
-            "description": "<mô tả chi tiết bài tập>"
+            "description": "<mô tả chi tiết bài tập>",
+            "link_reference": "<URL string (YouTube hoặc blog). Nếu không có thì null>"
         }}
     ]
 }}
@@ -147,11 +148,15 @@ Lưu ý:
             # Calculate log date based on day_of_week
             day_offset = workout_data["day_of_week"] - 1  # Convert to 0-6
             log_date = start_date + timedelta(days=day_offset)
+            link_reference = workout_data.get("link_reference")
+            if link_reference and not isinstance(link_reference, str):
+                link_reference = None                                           
 
             # Prepare workout metadata
             workout_metadata = {
                 "name": workout_data["name"],
-                "description": workout_data.get("description", "")
+                "description": workout_data.get("description", ""),
+                "link_reference": link_reference
             }
 
             # Check if workout log already exists for this date and workout type

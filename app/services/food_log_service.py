@@ -5,7 +5,6 @@ from flask_smorest import abort
 
 from app.db import db
 from app.models.food_log_model import FoodLogModel
-from app.models.food_model import FoodModel
 
 # Create logger for this module
 logger = logging.getLogger(__name__)
@@ -43,19 +42,17 @@ def create_food_log(user_id, food_log_data):
     """
     Create a new food log
     """
-    # Validate food exists
-    food = FoodModel.query.filter_by(id=food_log_data["food_id"]).first()
-    if not food:
-        logger.error(f"Food not found with id: {food_log_data['food_id']}")
-        abort(400, message="Food not found")
-
     try:
         food_log = FoodLogModel(
             user_id=user_id,
-            food_id=food_log_data["food_id"],
             meal_type=food_log_data.get("meal_type"),
             quantity=food_log_data.get("quantity", 1.0),
-            log_date=food_log_data["log_date"]
+            log_date=food_log_data["log_date"],
+            name=food_log_data["name"],
+            calories=food_log_data["calories"],
+            protein=food_log_data.get("protein"),
+            carbs=food_log_data.get("carbs"),
+            fat=food_log_data.get("fat"),
         )
 
         db.session.add(food_log)
@@ -80,20 +77,10 @@ def update_food_log(food_log_id, food_log_data):
         logger.error(f"Food log not found with id: {food_log_id}")
         abort(404, message="Food log not found")
 
-    # Validate food exists if food_id is being updated
-    if "food_id" in food_log_data:
-        food = FoodModel.query.filter_by(id=food_log_data["food_id"]).first()
-        if not food:
-            logger.error(f"Food not found with id: {food_log_data['food_id']}")
-            abort(400, message="Food not found")
-
     try:
-        if "food_id" in food_log_data:
-            food_log.food_id = food_log_data["food_id"]
-        if "quantity" in food_log_data:
-            food_log.quantity = food_log_data["quantity"]
-        if "log_date" in food_log_data:
-            food_log.log_date = food_log_data["log_date"]
+        for key, value in food_log_data.items():
+            if value is not None:
+                setattr(food_log, key, value)
 
         db.session.commit()
 
