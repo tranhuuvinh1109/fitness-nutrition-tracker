@@ -41,3 +41,12 @@ class FoodLogUpdateSchema(Schema):
 
 class FoodLogResponseSchema(PlainFoodLogSchema):
     pass
+
+
+class FoodLogWithFoodSchema(PlainFoodLogSchema):
+    """Compatibility schema: previously this project included a schema
+    that embedded related `Food` details. The `FoodLog` model currently
+    stores name/calories directly, so keep this as an alias to the
+    plain response schema to preserve router imports.
+    """
+    pass
