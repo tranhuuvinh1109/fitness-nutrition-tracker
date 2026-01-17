@@ -15,6 +15,7 @@ class PlainFoodLogSchema(Schema):
     protein = fields.Float(allow_none=True)
     carbs = fields.Float(allow_none=True)
     fat = fields.Float(allow_none=True)
+    status = fields.Int(dump_only=True)
 
 
 class FoodLogCreateSchema(Schema):
@@ -26,6 +27,7 @@ class FoodLogCreateSchema(Schema):
     protein = fields.Float(allow_none=True)
     carbs = fields.Float(allow_none=True)
     fat = fields.Float(allow_none=True)
+    status = fields.Int(missing=1)
 
 
 class FoodLogUpdateSchema(Schema):
@@ -37,6 +39,7 @@ class FoodLogUpdateSchema(Schema):
     protein = fields.Float(allow_none=True)
     carbs = fields.Float(allow_none=True)
     fat = fields.Float(allow_none=True)
+    status = fields.Int(allow_none=True)
 
 
 class FoodLogResponseSchema(PlainFoodLogSchema):
