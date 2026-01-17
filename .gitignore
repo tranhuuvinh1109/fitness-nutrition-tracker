@@ -205,7 +205,7 @@ secring.*
 .idea/
 
 # others
-migrations/
+migrations/__pycache__
 
 # BBDD
 *.db

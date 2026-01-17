@@ -12,7 +12,3 @@ class FoodModel(db.Model):
     protein = db.Column(db.Float)
     carbs = db.Column(db.Float)
     fat = db.Column(db.Float)
-    is_vietnamese = db.Column(db.Boolean, default=False)
-
-    # Relationships
-    food_logs = db.relationship("FoodLogModel", back_populates="food", cascade="all, delete-orphan")

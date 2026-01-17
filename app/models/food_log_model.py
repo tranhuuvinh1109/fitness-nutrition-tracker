@@ -18,6 +18,7 @@ class FoodLogModel(db.Model):
     protein = db.Column(db.Float)
     carbs = db.Column(db.Float)
     fat = db.Column(db.Float)
+    status = db.Column(db.Integer,nullable=True, default=1) # 1: created, 2: completed, 3: not completed
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

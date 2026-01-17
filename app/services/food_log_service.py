@@ -53,6 +53,7 @@ def create_food_log(user_id, food_log_data):
             protein=food_log_data.get("protein"),
             carbs=food_log_data.get("carbs"),
             fat=food_log_data.get("fat"),
+            status=food_log_data.get("status", 1),
         )
 
         db.session.add(food_log)
