@@ -22,3 +22,4 @@ class UserModel(db.Model):
     workout_logs = db.relationship("WorkoutLogModel", back_populates="user", cascade="all, delete-orphan")
     water_logs = db.relationship("WaterLogModel", back_populates="user", cascade="all, delete-orphan")
     ai_messages = db.relationship("AIMessageModel", back_populates="user", cascade="all, delete-orphan")
+    conversations = db.relationship("ConversationModel", back_populates="user", cascade="all, delete-orphan")

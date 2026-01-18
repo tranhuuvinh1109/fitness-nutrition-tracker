@@ -6,7 +6,8 @@ from flask_smorest import Blueprint
 from app.schemas.workout_log_schema import (
     WorkoutLogCreateSchema,
     WorkoutLogResponseSchema,
-    WorkoutLogUpdateSchema
+    WorkoutLogUpdateSchema,
+    WorkoutLogStatusUpdateBodySchema
 )
 from app.services import workout_log_service
 
@@ -43,6 +44,26 @@ class WorkoutLogList(MethodView):
         user_id = get_jwt_identity()
 
         result = workout_log_service.create_workout_log(user_id, workout_log_data)
+        return result
+
+    @jwt_required()
+    @blp.arguments(WorkoutLogStatusUpdateBodySchema)
+    @blp.response(200, WorkoutLogResponseSchema)
+    def put(self, status_data):
+        """Update workout log status for current user"""
+        from flask_jwt_extended import get_jwt_identity
+        user_id = get_jwt_identity()
+        
+        workout_log_id = status_data["workout_log_id"]
+        status = status_data["status"]
+        
+        # Get workout log and check ownership
+        workout_log = workout_log_service.get_workout_log(workout_log_id)
+        if str(workout_log.user_id) != user_id:
+            from flask_smorest import abort
+            abort(403, message="Access denied")
+            
+        result = workout_log_service.update_workout_log(workout_log_id, {"status": status})
         return result
 
 

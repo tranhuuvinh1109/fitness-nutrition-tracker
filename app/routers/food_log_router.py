@@ -18,12 +18,21 @@ class FoodLogList(MethodView):
     @jwt_required()
     @blp.response(200, FoodLogWithFoodSchema(many=True))
     def get(self):
-        """Get all food logs for current user"""
+        """Get all food logs for current user. Can filter by log_date or date range (start_day, end_day)"""
         from flask_jwt_extended import get_jwt_identity
+        from flask import request
         user_id = get_jwt_identity()
 
-        log_date = self.request.args.get('log_date')
-        result = food_log_service.get_all_food_logs(user_id=user_id, log_date=log_date)
+        log_date = request.args.get('log_date')
+        start_day = request.args.get('start_day')
+        end_day = request.args.get('end_day')
+        
+        result = food_log_service.get_all_food_logs(
+            user_id=user_id, 
+            log_date=log_date,
+            start_day=start_day,
+            end_day=end_day
+        )
         return result
 
     @jwt_required()

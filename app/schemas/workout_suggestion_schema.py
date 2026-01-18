@@ -1,6 +1,11 @@
 from marshmallow import Schema, fields
 
 
+class WorkoutSuggestionRequestSchema(Schema):
+    start_day = fields.Str(required=False, description="Start date for workout plan (YYYY-MM-DD)")
+    end_day = fields.Str(required=False, description="End date for workout plan (YYYY-MM-DD)")
+
+
 class WorkoutSuggestionWorkoutInfoSchema(Schema):
     id = fields.Str(dump_only=True)
     name = fields.Str(dump_only=True)

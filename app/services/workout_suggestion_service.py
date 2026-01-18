@@ -30,11 +30,30 @@ def get_openai_client():
     return openai_client
 
 
-def suggest_workout_plan(user_id):
+def suggest_workout_plan(user_id, start_date=None, end_date=None):
     """
     Suggest a personalized workout plan for a user based on their profile
     Returns a workout plan with sessions per week and exercises
     """
+    # Parse dates if provided, otherwise default to current week (Monday to Sunday)
+    today = date.today()
+    if start_date:
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+    else:
+        # Default to Monday of current week
+        days_since_monday = today.weekday()
+        start_date = today - timedelta(days=days_since_monday)
+
+    if end_date:
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        else:
+            end_date = end_date
+    else:   
+        # Default to Sunday of the same week as start_date
+        end_date = start_date + timedelta(days=6)
+
     # Get user profile
     user_profile = user_profile_service.get_user_profile(user_id)
     if not user_profile:
@@ -64,7 +83,9 @@ Thông tin người dùng:
 - Mức độ hoạt động: {user_info['activity_level']}
 - Mục tiêu: {json.dumps(user_info['target'], ensure_ascii=False) if user_info['target'] else 'Không có'}
 
-Hãy trả về một kế hoạch tập luyện trong 1 tuần với định dạng JSON sau:
+Kế hoạch tập luyện trong khoảng thời gian từ {start_date} đến {end_date}.
+
+Hãy trả về kế hoạch tập luyện với định dạng JSON sau:
 {{
     "sessions_per_week": <số buổi tập trong tuần (3-7)>,
     "workouts": [
@@ -73,7 +94,7 @@ Hãy trả về một kế hoạch tập luyện trong 1 tuần với định d�
             "type": "<cardio|strength|flexibility>",
             "duration_min": <thời gian tập (phút)>,
             "calories_burned": <calo đốt cháy ước tính>,
-            "day_of_week": <1-7, 1=Thứ 2, 7=Chủ nhật>,
+            "log_date": "<YYYY-MM-DD>",
             "description": "<mô tả chi tiết bài tập>",
             "link_reference": "<URL string (YouTube hoặc blog). Nếu không có thì null>"
         }}
@@ -82,7 +103,8 @@ Hãy trả về một kế hoạch tập luyện trong 1 tuần với định d�
 
 Lưu ý:
 - Mỗi bài tập phải có type là một trong: cardio, strength, flexibility
-- Phân bổ đều các buổi tập trong tuần
+- Phân bổ đều các buổi tập trong khoảng thời gian yêu cầu.
+- log_date phải nằm trong khoảng từ {start_date} đến {end_date}.
 - Đảm bảo phù hợp với mục tiêu và tình trạng sức khỏe của người dùng
 - Trả về chỉ JSON, không có text thêm"""
 
@@ -117,15 +139,9 @@ Lưu ý:
         created_workouts = []
         created_logs = []
         
-        # Calculate start date (Monday of current week)
-        # weekday() returns: 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday
-        today = date.today()
-        days_since_monday = today.weekday()  # 0 if Monday, 1 if Tuesday, etc.
-        start_date = today - timedelta(days=days_since_monday)  # Monday of current week
-
         for workout_data in workout_plan["workouts"]:
             # Validate required fields
-            required_fields = ["name", "type", "duration_min", "day_of_week"]
+            required_fields = ["name", "type", "duration_min", "log_date"]
             if not all(field in workout_data for field in required_fields):
                 logger.error(f"Missing required fields in workout data: {workout_data}")
                 continue  # Skip this workout if required fields are missing
@@ -145,9 +161,13 @@ Lưu ý:
                 logger.error(f"Invalid workout type: {workout_data.get('type')}, error: {e}")
                 continue  # Skip this workout if type is invalid
 
-            # Calculate log date based on day_of_week
-            day_offset = workout_data["day_of_week"] - 1  # Convert to 0-6
-            log_date = start_date + timedelta(days=day_offset)
+            # Parse log date from AI response
+            try:
+                workout_log_date = datetime.strptime(workout_data["log_date"], '%Y-%m-%d').date()
+            except ValueError:
+                logger.error(f"Invalid log date format from AI: {workout_data['log_date']}")
+                continue
+
             link_reference = workout_data.get("link_reference")
             if link_reference and not isinstance(link_reference, str):
                 link_reference = None                                           
@@ -162,7 +182,7 @@ Lưu ý:
             # Check if workout log already exists for this date and workout type
             existing_log = WorkoutLogModel.query.filter_by(
                 user_id=user_id,
-                log_date=log_date,
+                log_date=workout_log_date,
                 workout_type=workout_type_int
             ).first()
 
@@ -172,7 +192,7 @@ Lưu ý:
                     user_id=user_id,
                     duration_min=workout_data["duration_min"],
                     calories_burned=workout_data.get("calories_burned"),
-                    log_date=log_date,
+                    log_date=workout_log_date,
                     status=0,  # Default to planned
                     workout_type=workout_type_int,
                     workout_metadata=workout_metadata,
@@ -194,7 +214,7 @@ Lưu ý:
                 "name": workout_data["name"],
                 "type": workout_data["type"],
                 "description": workout_data.get("description", ""),
-                "day_of_week": workout_data["day_of_week"]
+                "log_date": workout_data["log_date"]
             })
 
         # Commit all changes
