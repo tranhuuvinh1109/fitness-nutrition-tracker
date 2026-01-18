@@ -5,11 +5,26 @@ from flask_smorest import Blueprint
 from app.schemas.ai_message_schema import (
     AIMessageCreateSchema,
     AIMessageResponseSchema,
-    AIMessageUpdateSchema
+    AIMessageUpdateSchema,
+    AIMessageAskSchema
 )
 from app.services import ai_message_service
 
 blp = Blueprint("AIMessage", __name__, description="AI Message API")
+
+
+@blp.route("/ai-messages/ask")
+class AIMessageAsk(MethodView):
+    @jwt_required()
+    @blp.arguments(AIMessageAskSchema)
+    @blp.response(200, AIMessageResponseSchema)
+    def post(self, ask_data):
+        """Ask AI a question and get response with user profile context"""
+        from flask_jwt_extended import get_jwt_identity
+        user_id = get_jwt_identity()
+        
+        result = ai_message_service.ask_ai(user_id, ask_data["message"])
+        return result
 
 
 @blp.route("/ai-messages")
@@ -21,8 +36,7 @@ class AIMessageList(MethodView):
         from flask_jwt_extended import get_jwt_identity
         user_id = get_jwt_identity()
 
-        role = self.request.args.get('role')
-        result = ai_message_service.get_all_ai_messages(user_id=user_id, role=role)
+        result = ai_message_service.get_all_ai_messages(user_id=user_id)
         return result
 
     @jwt_required()
@@ -95,9 +109,10 @@ class AIConversation(MethodView):
     def get(self):
         """Get conversation history for current user"""
         from flask_jwt_extended import get_jwt_identity
+        from flask import request
         user_id = get_jwt_identity()
 
-        limit = self.request.args.get('limit', 50, type=int)
+        limit = request.args.get('limit', 50, type=int)
         result = ai_message_service.get_conversation_history(user_id, limit=limit)
         return result
 

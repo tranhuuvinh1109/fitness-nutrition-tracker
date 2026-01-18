@@ -40,5 +40,10 @@ class WorkoutLogUpdateSchema(Schema):
     description = fields.Str(allow_none=True)
 
 
+class WorkoutLogStatusUpdateBodySchema(Schema):
+    workout_log_id = fields.Str(required=True)
+    status = fields.Int(validate=validate.OneOf([0, 1, 2]), required=True)
+
+
 class WorkoutLogResponseSchema(PlainWorkoutLogSchema):
     pass

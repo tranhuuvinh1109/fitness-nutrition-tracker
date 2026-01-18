@@ -10,16 +10,32 @@ from app.models.food_log_model import FoodLogModel
 logger = logging.getLogger(__name__)
 
 
-def get_all_food_logs(user_id=None, log_date=None):
+def get_all_food_logs(user_id=None, log_date=None, start_day=None, end_day=None):
     """
-    Get all food logs, optionally filtered by user_id and/or log_date
+    Get all food logs, optionally filtered by user_id, log_date, or date range (start_day, end_day)
     """
+    from datetime import datetime
     query = FoodLogModel.query
 
     if user_id:
         query = query.filter_by(user_id=user_id)
+    
+    # If log_date is provided, use it (takes precedence over date range)
     if log_date:
+        if isinstance(log_date, str):
+            log_date = datetime.strptime(log_date, '%Y-%m-%d').date()
         query = query.filter_by(log_date=log_date)
+    else:
+        # Use date range if provided
+        if start_day:
+            if isinstance(start_day, str):
+                start_day = datetime.strptime(start_day, '%Y-%m-%d').date()
+            query = query.filter(FoodLogModel.log_date >= start_day)
+        
+        if end_day:
+            if isinstance(end_day, str):
+                end_day = datetime.strptime(end_day, '%Y-%m-%d').date()
+            query = query.filter(FoodLogModel.log_date <= end_day)
 
     food_logs = query.all()
     return food_logs

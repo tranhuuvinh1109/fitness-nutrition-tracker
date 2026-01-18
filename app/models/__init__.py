@@ -8,3 +8,4 @@ from app.models.workout_model import WorkoutModel
 from app.models.workout_log_model import WorkoutLogModel
 from app.models.water_log_model import WaterLogModel
 from app.models.ai_message_model import AIMessageModel
+from app.models.conversation_model import ConversationModel
