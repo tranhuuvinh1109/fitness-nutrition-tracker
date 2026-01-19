@@ -40,6 +40,7 @@ class WorkoutSuggestionItemSchema(Schema):
     type = fields.Str(dump_only=True)
     description = fields.Str(dump_only=True)
     day_of_week = fields.Int(dump_only=True)
+    link_reference = fields.Str(dump_only=True, allow_none=True)
 
 
 class WorkoutSuggestionResponseSchema(Schema):

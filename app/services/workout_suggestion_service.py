@@ -105,6 +105,7 @@ Lưu ý:
 - Mỗi bài tập phải có type là một trong: cardio, strength, flexibility
 - Phân bổ đều các buổi tập trong khoảng thời gian yêu cầu.
 - log_date phải nằm trong khoảng từ {start_date} đến {end_date}.
+- link_reference PHẢI là một link video hướng dẫn trên YouTube (nếu có thể tìm được chính xác).
 - Đảm bảo phù hợp với mục tiêu và tình trạng sức khỏe của người dùng
 - Trả về chỉ JSON, không có text thêm"""
 
@@ -214,7 +215,8 @@ Lưu ý:
                 "name": workout_data["name"],
                 "type": workout_data["type"],
                 "description": workout_data.get("description", ""),
-                "log_date": workout_data["log_date"]
+                "log_date": workout_data["log_date"],
+                "link_reference": workout_data.get("link_reference")
             })
 
         # Commit all changes
