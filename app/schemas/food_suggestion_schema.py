@@ -6,7 +6,7 @@ from app.schemas.food_log_schema import PlainFoodLogSchema
 
 class FoodSuggestionRequestSchema(Schema):
     dayPlan = fields.Str(allow_none=True)
-    meal_type = fields.Enum(MealTypeEnum, allow_none=True)
+    meal_type = fields.Str(allow_none=True, description="Meal type (breakfast, lunch, dinner, snack) or 'all'")
 
 
 class FoodSuggestionItemSchema(Schema):

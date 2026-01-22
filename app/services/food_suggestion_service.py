@@ -77,12 +77,24 @@ def suggest_food_plan(user_id, day_plan=None, meal_type=None):
 
     # Specific meal type prompt addition
     meal_type_prompt = ""
+    target_count_prompt = "01"
+    is_full_day = False
+
     if meal_type:
-        meal_type_value = meal_type.value if hasattr(meal_type, 'value') else meal_type
-        meal_type_prompt = f"- Chỉ đề xuất món ăn cho bữa: {meal_type_value}"
+        if isinstance(meal_type, str) and meal_type.lower() == "all":
+            meal_type_prompt = "- Đề xuất thực đơn cho CẢ 4 BỮA: Sáng (Breakfast), Trưa (Lunch), Tối (Dinner), và Phụ (Snack)."
+            target_count_prompt = "04 (1 món cho mỗi bữa)"
+            is_full_day = True
+        else:
+            # Handle Enum or string specific meal type
+            meal_type_value = meal_type.value if hasattr(meal_type, 'value') else meal_type
+            meal_type_prompt = f"- Chỉ đề xuất món ăn cho bữa: {meal_type_value}"
+    else:
+         # Default to suggest 1 random healthy dish if no meal type specified
+         pass
 
     # Create prompt for OpenAI
-    prompt = f"""Bạn là một chuyên gia dinh dưỡng thể hình am hiểu ẩm thực Việt Nam (Healthy/Eat Clean). Hãy đề xuất **01 món ăn Việt Nam** KHỎE MẠNH (Healthy), phù hợp cho người tập GYM vào lúc này dựa trên thông tin sau:
+    prompt = f"""Bạn là một chuyên gia dinh dưỡng thể hình am hiểu ẩm thực Việt Nam (Healthy/Eat Clean). Hãy đề xuất **{target_count_prompt} món ăn Việt Nam** KHỎE MẠNH (Healthy), phù hợp cho người tập GYM vào lúc này dựa trên thông tin sau:
 
 Thông tin người dùng:
 - Tuổi: {user_info['age']}
@@ -111,12 +123,12 @@ Hãy trả về kết quả dưới dạng JSON sau:
 }}
 
 Lưu ý:
-- Chỉ đề xuất SỐ LƯỢNG ĐÚNG 1 MÓN ĂN.
+- Tránh gợi ý món ăn trùng lặp.
 - Món ăn phải là món Việt Nam nhưng được chế biến theo phong cách Healthy/Eat Clean (ít dầu mỡ, ít đường, ít gia vị mặn).
 - Ưu tiên thực phẩm giàu Protein và chất xơ.
 - KHÔNG ĐƯỢC trùng với các món đã ăn trong 7 ngày qua (đã liệt kê ở trên).
 - Tự động xác định bữa ăn (meal_type) phù hợp.
-{'- Đảm bảo món ăn phù hợp với bữa: ' + (meal_type.value if hasattr(meal_type, 'value') else str(meal_type)) if meal_type else ''}
+{meal_type_prompt}
 - Đảm bảo dinh dưỡng phù hợp với mục tiêu thể hình của người dùng.
 - Trả về chỉ JSON, không có text thêm."""
 
@@ -151,8 +163,10 @@ Lưu ý:
         created_food_items = []
         created_logs = []
         
-        # Limit to 1 item just in case AI returns more
-        for food_data in food_plan["foods"][:1]:
+        # If full day (all), process all items. Else limit to 1.
+        items_to_process = food_plan["foods"] if is_full_day else food_plan["foods"][:1]
+
+        for food_data in items_to_process:
             # Validate required fields
             required_fields = ["name", "meal_type", "calories"]
             if not all(field in food_data for field in required_fields):
@@ -160,9 +174,20 @@ Lưu ý:
                 continue
 
             # Validate meal type
-            if meal_type:
-                meal_type_enum = meal_type
-                meal_type_str = meal_type.value
+            if meal_type and not is_full_day:
+                # specific meal type requested
+                if hasattr(meal_type, 'value'):
+                     meal_type_enum = meal_type
+                     meal_type_str = meal_type.value
+                else:
+                     # It's a string, likely from schema passing "breakfast" etc
+                     try:
+                        meal_type_enum = MealTypeEnum(meal_type)
+                        meal_type_str = meal_type
+                     except ValueError:
+                        # Fallback try to use what AI says if user input was weird, or just error
+                        logger.error(f"Invalid meal type input: {meal_type}")
+                        continue
             else:
                 try:
                     meal_type_str = food_data["meal_type"].lower()

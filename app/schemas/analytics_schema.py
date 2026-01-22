@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields, validate
 
 class AnalyticsRequestSchema(Schema):
-    mode = fields.Int(validate=validate.OneOf([7, 30]), missing=7, description="Number of days to analyze (7 or 30)")
+    mode = fields.Int(validate=validate.OneOf([1, 7, 30]), missing=7, description="Number of days to analyze (1, 7 or 30)")
 
 class AnalyticsItemSchema(Schema):
     day = fields.Date(dump_only=True)
