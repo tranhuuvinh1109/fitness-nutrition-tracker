@@ -177,7 +177,7 @@ Lưu ý:
             workout_metadata = {
                 "name": workout_data["name"],
                 "description": workout_data.get("description", ""),
-                # "link_reference": link_reference
+                "link_reference": link_reference
             }
 
             # Check if workout log already exists for this date and workout type
