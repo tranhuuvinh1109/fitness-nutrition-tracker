@@ -26,8 +26,7 @@ def get_nutrition_analytics(user_id, mode=7):
     ).filter(
         FoodLogModel.user_id == user_id,
         FoodLogModel.log_date >= start_date,
-        FoodLogModel.log_date <= end_date,
-        FoodLogModel.status == 2
+        FoodLogModel.log_date <= end_date
     ).group_by(
         FoodLogModel.log_date
     ).all()
@@ -74,43 +73,61 @@ def get_workout_analytics(user_id, mode=7):
     end_date = date.today()
     start_date = end_date - timedelta(days=mode - 1)
 
-    # Query to sum up workout stats by date
-    logs = db.session.query(
-        WorkoutLogModel.log_date,
-        func.sum(WorkoutLogModel.duration_min).label('total_duration'),
-        func.sum(WorkoutLogModel.calories_burned).label('total_calories')
-    ).filter(
+        # Query all logs for the period without grouping
+    logs = db.session.query(WorkoutLogModel).filter(
         WorkoutLogModel.user_id == user_id,
         WorkoutLogModel.log_date >= start_date,
         WorkoutLogModel.log_date <= end_date
-    ).group_by(
-        WorkoutLogModel.log_date
     ).all()
 
-    # Convert results to map
-    data_map = {
-        log.log_date: {
-            "duration_min": int(log.total_duration) if log.total_duration else 0,
-            "calo": int(log.total_calories) if log.total_calories else 0
-        }
-        for log in logs
-    }
+    # Aggregate by date in Python
+    # Map: date -> {duration_min: sum, calo: sum, statuses: set()}
+    daily_data = {}
+    
+    for log in logs:
+        if log.log_date not in daily_data:
+            daily_data[log.log_date] = {
+                "duration_min": 0,
+                "calo": 0,
+                "statuses": set()
+            }
+        
+        daily_data[log.log_date]["duration_min"] += log.duration_min
+        if log.calories_burned:
+            daily_data[log.log_date]["calo"] += log.calories_burned
+        if log.status is not None:
+            daily_data[log.log_date]["statuses"].add(log.status)
 
     # Generate full list
     result = []
     current_date = start_date
     while current_date <= end_date:
-        if current_date in data_map:
-            stats = data_map[current_date]
+        if current_date in daily_data:
+            stats = daily_data[current_date]
+            
+            # Determine status priority: Completed (1) > Skipped (2) > Planned (0)
+            status_set = stats["statuses"]
+            final_status = None
+            
+            if 1 in status_set:
+                final_status = 1
+            elif 2 in status_set:
+                final_status = 2
+            else:
+                final_status = 0
+                
             result.append({
                 "day": current_date,
-                **stats
+                "duration_min": stats["duration_min"],
+                "calo": stats["calo"],
+                "status": final_status
             })
         else:
             result.append({
                 "day": current_date,
                 "duration_min": 0,
-                "calo": 0
+                "calo": 0,
+                "status": 0
             })
         current_date += timedelta(days=1)
 

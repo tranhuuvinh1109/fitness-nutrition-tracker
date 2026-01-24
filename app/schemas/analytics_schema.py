@@ -18,6 +18,7 @@ class AnalyticsWorkoutItemSchema(Schema):
     day = fields.Date(dump_only=True)
     duration_min = fields.Int(dump_only=True)
     calo = fields.Int(dump_only=True)
+    status = fields.Int(dump_only=True, allow_none=True)
 
 
 class AnalyticsWorkoutResponseSchema(Schema):
