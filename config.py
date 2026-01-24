@@ -59,6 +59,9 @@ class DefaultConfig:
     # OpenAI Configuration
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
+    # Scheduler Configuration
+    SCHEDULER_API_ENABLED = True
+
 
 class DevelopConfig(DefaultConfig):
     # App environment
